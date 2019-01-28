@@ -102,4 +102,18 @@ public class RamirezUnityTests
 
     }
 
+    [Test]
+    public void SearchUpTest()
+    {
+        string search_parent = "grand_grand_grand_parent";
+        GameObject ggg_parent = GameObject.Find(search_parent);
+        Assert.AreEqual(search_parent, ggg_parent.name);
+
+        GameObject kid = DoUnity.GetGameObject("kid");
+        // //Find GameObject going up the hierarchy
+        GameObject find_ggg = DoUnity.GetUpGameObject(kid, ggg_parent.name);
+
+        Assert.AreEqual(search_parent, find_ggg.name);
+
+    }
 }

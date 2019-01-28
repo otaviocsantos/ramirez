@@ -6,6 +6,118 @@ namespace Ramirez
 {
     public class DoUnity
     {
+        /// <summary>
+        /// Try to GetComponent from target, if none is found then AddComponent desired and return
+        /// </summary>
+        /// <typeparam name="T">Component to be Get or Added</typeparam>
+        /// <param name="fromGameObject">target</param>
+        /// <returns></returns>
+        public static T ProduceComponent<T>(GameObject fromGameObject) where T : Component
+        {
+            if (fromGameObject == null)
+                throw new System.Exception("Cannot ProduceComponent in a null GameObject");
+            T result = fromGameObject.GetComponent<T>() as T;
+            if (result == null)
+                result = fromGameObject.AddComponent<T>() as T;
+
+            return result;
+        }
+
+        /// <summary>
+        /// Search for a Component "withName" inside "fromGameObject".
+        /// </summary>
+        /// <param name="fromGameObject"></param>
+        /// <param name="withName"></param>
+        /// <returns></returns>
+        public static T GetComponent<T>(GameObject fromGameObject, string withName) where T : class
+        {
+            T result = null;
+            GameObject go = GetGameObject(fromGameObject, withName);
+            if (go != null)
+            {
+                result = go.GetComponent<T>() as T;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Does a in depth search for a Component by its name.
+        /// </summary>
+        /// <param name="withName"></param>
+        /// <returns></returns>
+        public static T GetComponent<T>(string withName) where T : class
+        {
+            T result = null;
+            GameObject go = GetGameObject(withName);
+            if (go != null)
+            {
+                result = go.GetComponent<T>() as T;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Does a in depth search for a GameObject by its name.
+        /// </summary>
+        /// <param name="withName"></param>
+        /// <returns></returns>
+        public static GameObject GetGameObject(string withName)
+        {
+            GameObject result = null;
+            Transform[] xform = UnityEngine.Object.FindObjectsOfType<Transform>();
+            foreach (Transform t in xform)
+            {
+                GameObject rootObject = t.gameObject;
+                result = GetGameObject(rootObject, withName);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Search for a GameObject "withName" inside "fromGameObject".
+        /// </summary>
+        /// <param name="fromGameObject"></param>
+        /// <param name="withName"></param>
+        /// <returns></returns>
+        public static GameObject GetGameObject(GameObject fromGameObject, string withName)
+        {
+            if (fromGameObject != null)
+            {
+                Transform[] ts = fromGameObject.transform.GetComponentsInChildren<Transform>(true);
+                foreach (Transform t in ts)
+                {
+                    if (t.gameObject.name == withName) return t.gameObject;
+                }
+                return null;
+            }
+            else
+                throw new System.Exception("Cannot get component of an empty Object");
+        }
+
+        /// <summary>
+        /// Search for a Transform "withName" inside "fromGameObject".
+        /// </summary>
+        /// <param name="fromGameObject"></param>
+        /// <param name="withName"></param>
+        /// <returns></returns>
+        public static Transform GetTransform(GameObject fromGameObject, string withName)
+        {
+            if (fromGameObject != null)
+            {
+                Transform[] ts = fromGameObject.transform.GetComponentsInChildren<Transform>(true);
+                foreach (Transform t in ts)
+                {
+                    if (t.name == withName) return t;
+                }
+                return null;
+            }
+            else
+                throw new System.Exception("Cannot get component of an empty Object");
+        }
 
         /// <summary>
         /// Copy position, localPosition, rotation, localRotation and localScale, from one GameObject to antother
@@ -74,6 +186,55 @@ namespace Ramirez
             ToggleChildren(go, true);
         }
 
+        /*
+        Search up hierarchy for a specific named GameObject
+        starting from "go" parameter, if "maxIterations" 
+        is undefined maxIterations will continue until root element is reached
+        */
+        /// <param name="fromGameObject"></param>
+        /// <param name="withName"></param>
+        public static GameObject GetUpGameObject(GameObject fromGameObject, string withName, int maxIterations = default(int))
+        {
+            if (fromGameObject.name == withName)
+            {
+                return fromGameObject;
+            }
+
+            if (fromGameObject.transform.parent)
+            {
+                if (maxIterations == default(int))
+                {
+                    return GetUpGameObject(fromGameObject.transform.parent.gameObject, withName, maxIterations);
+                }
+                else if (maxIterations > 0)
+                {
+                    return GetUpGameObject(fromGameObject.transform.parent.gameObject, withName, --maxIterations);
+                }
+            }
+
+            return null;
+
+        }
+
+        /// <summary>
+        /// Does an upward search for a Component by its name.
+        /// </summary>
+        /// <param name="fromGameObject"></param>
+        /// <param name="withName"></param>
+        /// <returns></returns>
+        public static T GetUpComponent<T>(GameObject fromGameObject, string withName, int maxIterations = default(int)) where T : class
+        {
+            T result = null;
+            GameObject go = GetUpGameObject(fromGameObject, withName);
+            if (go != null)
+            {
+                result = go.GetComponent<T>() as T;
+            }
+            return result;
+        }
+
+
+
         public static void ToggleChildren(GameObject go, bool state = true)
         {
             if (go != null)
@@ -92,7 +253,6 @@ namespace Ramirez
                 throw new System.Exception("ToggleChildren GameObject cannot be empty");
             }
         }
-
 
     }
 }
